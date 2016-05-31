@@ -42,6 +42,19 @@ def diagA_Xing(X,S,D):
     #X: the data matrix
     #S: the similarity Matrix
     #D: the dissimilarty Matrix    
+
+    #pre-calculating d_ij_S and d_ij_D
+    d_ij_S = np.zeros(shape=[X.shape[0],X.shape[0],X.shape[1]])
+    for i in range(X.shape[0]):
+        for j in range(i+1, X.shape[0]):
+            if S[i,j] == 1:
+                d_ij_S[i,j,:] = np.array(X[i]-X[j]) 
+    
+    d_ij_D = np.zeros(shape=[X.shape[0],X.shape[0],X.shape[1]])
+    for i in range(X.shape[0]):
+        for j in range(i+1, X.shape[0]):
+            if D[i,j] == 1:
+                d_ij_D[i,j,:] = np.array(X[i]-X[j]) 
     
     #Creating the objective function and the constraints function here
     def constraint(A):
@@ -49,23 +62,14 @@ def diagA_Xing(X,S,D):
         values = []
         for i in range(D.shape[0]):
             for j in range(D.shape[1]):
-                if D[i,j] == 0:
-                    continue
-                M = np.array(X[i]-X[j])
-                Y = np.array([M[x]*A[x] for x in range(len(M))])
-                values.append(np.sqrt(sum(x**2 for x in Y)))
+               values.append(np.sqrt(d_ij_D[i,j,:].T*np.multiply(d_ij_D[i,j,:],A)))
         return np.sum(values)
     
     def objective(A):
         values = []
         for i in range(S.shape[0]):
             for j in range(S.shape[1]):
-                if S[i,j] == 0 and D[i,j] == 0:
-                    continue
-                if S[i,j] == 1:
-                    M = np.array(X[i] - X[j])
-                    Y = np.array([M[x]*A[x] for x in range(len(M))])
-                    values.append(sum(x**2 for x in Y))
+                values.append(d_ij_S[i,j,:].T*np.multiply(d_ij_S[i,j,:],A))
         print 'processing'
         return np.sum(values) - math.log(constraint(A))
     
