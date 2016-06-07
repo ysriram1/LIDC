@@ -43,7 +43,7 @@ def diagA_Xing(X,S,D):
     #S: the similarity Matrix
     #D: the dissimilarty Matrix    
 
-    #pre-calculating d_ij_S and d_ij_D
+    #pre-calculating d_ij_S and d_ij_D and d_ij
     d_ij_S = np.zeros(shape=[X.shape[0],X.shape[0],X.shape[1]])
     for i in range(X.shape[0]):
         for j in range(i+1, X.shape[0]):
@@ -54,36 +54,67 @@ def diagA_Xing(X,S,D):
     for i in range(X.shape[0]):
         for j in range(i+1, X.shape[0]):
             if D[i,j] == 1:
-                d_ij_D[i,j,:] = np.array(X[i]-X[j]) 
+                d_ij_D[i,j,:] = np.array(X[i]-X[j])
+    
+    d_ij_S_sq = np.square(d_ij_S) 
+    d_ij_D_sq = np.square(d_ij_D) 
     
     #Creating the objective function and the constraints function here
     def constraint(A):
-        global values
-        values = []
+        square_A = d_ij_D_sq*A
+        sqrts_A = np.zeros(shape=[square_A.shape[0],square_A.shape[1]])
         for i in range(D.shape[0]):
             for j in range(D.shape[1]):
-               values.append(np.sqrt(d_ij_D[i,j,:].T*np.multiply(d_ij_D[i,j,:],A)))
-        return np.sum(values)
+                sqrts_A[i,j] = np.sum(square_A[i,j,:])
+        return np.sum(np.sqrt(sqrts_A))
     
     def objective(A):
-        values = []
-        for i in range(S.shape[0]):
-            for j in range(S.shape[1]):
-                values.append(d_ij_S[i,j,:].T*np.multiply(d_ij_S[i,j,:],A))
-        print 'processing'
-        return np.sum(values) - math.log(constraint(A))
+        print('processed')
+        return np.sum(d_ij_S_sq*A) - math.log(constraint(A))
     
+#    def constraint(A):
+#        global values
+#        values = []
+#        for i in range(D.shape[0]):
+#            for j in range(D.shape[1]):
+#               values.append(np.sqrt(d_ij_D[i,j,:].T*np.multiply(d_ij_D[i,j,:],A)))
+#        return np.sum(values)
+#    
+#    def objective(A):
+#        values = []
+#        for i in range(S.shape[0]):
+#            for j in range(S.shape[1]):
+#                values.append(d_ij_S[i,j,:].T*np.multiply(d_ij_S[i,j,:],A))
+#        print 'processing'
+#        return np.sum(values) - math.log(constraint(A))
+        
+    def grad(A):
+        global grads
+        grads = []
+        for l in range(d_ij_D.shape[2]):
+            temp = np.zeros(shape=[1,1,X.shape[1]])
+            temp[0,0,l] = 1
+            sum_S = np.sum(np.square(d_ij_S*temp))
+            #sum_D = np.sum(np.square(d_ij_D*temp))
+            gradVal = sum_S #- (0.5/(constraint(A)**2)*sum_D) #the (0.5/(constraint(A)**2)*sum_D) almost has no impact, can be removed? A has no impact?
+            grads.append(gradVal)
+        return np.array(grads)
+       
+  
     A0 = np.random.rand(X.shape[1])
     
     #return approx_grad=True(objective, A0, maxiter=20)
     #return differential_evolution(objective, [(0,10) for i in range(len(A0))])
-    return fmin_l_bfgs_b(objective, A0, approx_grad=True)
+    return fmin_l_bfgs_b(objective, A0, fprime = grad)
     #return fmin_cobyla(objective, A0,[constraint],maxfun=10**10)
     
 timeA = time.time()
 result_diag = diagA_Xing(X, S, D) #taking too long
 timeB = time.time()
 
+
+
+###############################################################################################################
 def fullA_Xing(X,S,D):
     #X: the data matrix
     #S: the similarity Matrix
