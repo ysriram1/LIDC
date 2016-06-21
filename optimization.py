@@ -36,6 +36,8 @@ def dataPreprocess(data, targetArray, multipleLabels = True):
                 D[i,j] = 1
     return X, S, D
 
+X,S,D = dataPreprocess(data = data_lidc, targetArray = targets_lidc, multipleLabels=True)
+
 X,S,D = dataPreprocess(data = data_iris, targetArray = targets_iris, multipleLabels=False)
 
 np.savetxt('./data.csv',X,delimiter=',')
@@ -99,10 +101,12 @@ def diagA_Xing(X,S,D):
         global grads
         grads = []
         for l in range(d_ij_D.shape[2]):
-            temp = np.zeros(shape=[1,1,X.shape[1]])
-            temp[0,0,l] = 1
-            sum_S = np.sum(np.square(d_ij_S*temp))
-            sum_D = np.sum(np.square(d_ij_D*temp))
+            #temp = np.zeros(shape=[1,1,X.shape[1]])
+            #temp[0,0,l] = 1
+            temp = np.zeros(X.shape[1])
+            temp[l] = 1
+            sum_S = np.sum(np.tensordot(d_ij_S_sq,temp,([2],[0])))
+            sum_D = np.sum(np.tensordot(d_ij_D_sq,temp,([2],[0])))
             gradVal = sum_S - (0.5/(constraint(A)**2)*sum_D) #the (0.5/(constraint(A)**2)*sum_D) almost has no impact, can be removed? A has no impact?
             grads.append(gradVal)
         return np.array(grads)
@@ -112,7 +116,7 @@ def diagA_Xing(X,S,D):
     
     #return approx_grad=True(objective, A0, maxiter=20)
     #return differential_evolution(objective, [(0,10) for i in range(len(A0))])
-    return fmin_l_bfgs_b(objective, A0, fprime = grad)
+    return fmin_l_bfgs_b(objective, A0, fprime=grad)
     #return fmin_cobyla(objective, A0,[constraint],maxfun=10**10)
     
 timeA = time.time()
