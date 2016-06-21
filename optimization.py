@@ -67,12 +67,12 @@ def diagA_Xing(X,S,D):
     
     #Creating the objective function and the constraints function here
     def constraint(A):
-        square_A = d_ij_D_sq*A
-        sqrts_A = np.zeros(shape=[square_A.shape[0],square_A.shape[1]])
-        for i in range(D.shape[0]):
-            for j in range(D.shape[1]):
-                sqrts_A[i,j] = np.sum(square_A[i,j,:])
-        return np.sum(np.sqrt(sqrts_A))
+        #square_A = d_ij_D_sq*A
+        #sqrts_A = np.zeros(shape=[square_A.shape[0],square_A.shape[1]])
+        #for i in range(D.shape[0]):
+            #for j in range(D.shape[1]):
+                #sqrts_A[i,j] = np.sum(square_A[i,j,:])
+        return np.sum(np.sqrt(np.tensordot(d_ij_D_sq, A, ([2],[0]))))
     
     def objective(A):
         print('processed')
