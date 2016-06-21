@@ -12,30 +12,36 @@ import time
 
 os.chdir('C:/Users/SYARLAG1/Desktop/LIDC')
 
-data = np.genfromtxt('./LIDC_REU2015.csv', delimiter = ',', skip_header = 1 , usecols = (range(11,76)))
-targets = np.genfromtxt('./LIDC_REU2015.csv', delimiter = ',', skip_header = 1, usecols = (84,93,102,111)).astype(int)
+data_lidc = np.genfromtxt('./LIDC_REU2015.csv', delimiter = ',', skip_header = 1 , usecols = (range(11,76)))
+targets_lidc = np.genfromtxt('./LIDC_REU2015.csv', delimiter = ',', skip_header = 1, usecols = (84,93,102,111)).astype(int)
 
+data_iris = np.genfromtxt('./iris.txt', delimiter = ',',usecols = (range(4)))
+targets_iris = np.genfromtxt('./iris.txt', delimiter = ',', usecols = 4, dtype=None)
 
-def dataPreprocess(data, targetArray):  
+def dataPreprocess(data, targetArray, multipleLabels = True):  
     minmax = lambda x: (x-x.min())/(x.max() - x.min())
     X = np.apply_along_axis(minmax, 0, data)
     ##For binary similarities
-    global singleTarget
-    singleTarget = np.array([np.argmax(np.bincount(i)) for i in targetArray]) #Getting the mode for each target case
+    if multipleLabels:
+        singleTarget = np.array([np.argmax(np.bincount(i)) for i in targetArray]) #Getting the mode for each target case
+    else:
+        singleTarget = targetArray
     S = np.zeros(shape=[singleTarget.shape[0], singleTarget.shape[0]])
     D = np.zeros(shape=[singleTarget.shape[0], singleTarget.shape[0]])
     for i in range(S.shape[0]):
         for j in range(i+1, S.shape[0]):
-        #for j in range(S.shape[0]):
-            #if i == j or S[j,i] == 1 or D[j,i] == 1:
-                #continue
             if singleTarget[i] == singleTarget[j]:
                 S[i,j] = 1                
             else:
                 D[i,j] = 1
     return X, S, D
 
-X,S,D = dataPreprocess(data = data, targetArray = targets)
+X,S,D = dataPreprocess(data = data_iris, targetArray = targets_iris, multipleLabels=False)
+
+np.savetxt('./data.csv',X,delimiter=',')
+np.savetxt('./S.csv',S, delimiter=',')
+np.savetxt('./D.csv',S, delimiter=',')
+
 
 ########################################################################################################################
 def diagA_Xing(X,S,D):
@@ -95,8 +101,8 @@ def diagA_Xing(X,S,D):
             temp = np.zeros(shape=[1,1,X.shape[1]])
             temp[0,0,l] = 1
             sum_S = np.sum(np.square(d_ij_S*temp))
-            #sum_D = np.sum(np.square(d_ij_D*temp))
-            gradVal = sum_S #- (0.5/(constraint(A)**2)*sum_D) #the (0.5/(constraint(A)**2)*sum_D) almost has no impact, can be removed? A has no impact?
+            sum_D = np.sum(np.square(d_ij_D*temp))
+            gradVal = sum_S - (0.5/(constraint(A)**2)*sum_D) #the (0.5/(constraint(A)**2)*sum_D) almost has no impact, can be removed? A has no impact?
             grads.append(gradVal)
         return np.array(grads)
        
