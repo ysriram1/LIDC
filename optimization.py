@@ -72,6 +72,7 @@ def diagA_Xing(X,S,D):
         #for i in range(D.shape[0]):
             #for j in range(D.shape[1]):
                 #sqrts_A[i,j] = np.sum(square_A[i,j,:])
+        #return np.sum(np.sqrt(sqrts_A))        
         return np.sum(np.sqrt(np.tensordot(d_ij_D_sq, A, ([2],[0]))))
     
     def objective(A):
