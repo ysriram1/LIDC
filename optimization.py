@@ -6,7 +6,7 @@ This is a temporary script file.
 """
 import os
 import numpy as np
-from scipy.optimize import minimize, fmin_cobyla, linprog, fmin_cg, fmin_l_bfgs_b, differential_evolution, fmin_cg
+from scipy.optimize import minimize, fmin_cobyla, linprog, fmin_cg, fmin_l_bfgs_b, differential_evolution, fmin_cg, fsolve
 import math
 import time
 
@@ -46,7 +46,7 @@ np.savetxt('./D.csv',S, delimiter=',')
 
 
 ########################################################################################################################
-def diagA_Xing(X,S,D):
+def diagA_Xing(X,S,D, maxIter = 100):
     #X: the data matrix
     #S: the similarity Matrix
     #D: the dissimilarty Matrix    
@@ -114,15 +114,19 @@ def diagA_Xing(X,S,D):
   
     A0 = np.random.rand(X.shape[1])
     
+    
+    return fsolve(objective, A0)
     #return approx_grad=True(objective, A0, maxiter=20)
     #return differential_evolution(objective, [(0,10) for i in range(len(A0))])
-    return fmin_l_bfgs_b(objective, A0, fprime=grad)
+    #return fmin_l_bfgs_b(objective, A0, fprime=grad, maxiter = maxIter)
+    #return fmin_l_bfgs_b(objective, A0, approx_grad=True, epsilon=0.01)
     #return fmin_cobyla(objective, A0,[constraint],maxfun=10**10)
     
 timeA = time.time()
 result_diag = diagA_Xing(X, S, D) #taking too long
 timeB = time.time()
-
+print 'time taken: ', timeB-timeA
+result_diag
 
 
 ###############################################################################################################
