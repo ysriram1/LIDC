@@ -101,6 +101,28 @@ plt.ylabel('Probability')
 plt.title('Average Predicted Dist vs Acutal Dist')
 ax.legend()
 
+###########################################################################################################################
+resultD = {}
+
+for i, label in enumerate(testLabels):
+    if tuple(label) in resultD.keys():
+        resultD[tuple(label)].append(pred9Cos[i])
+        continue
+    else:
+        resultD[tuple(label)] = []
+        resultD[tuple(label)].append(pred9Cos[i])
+
+for key in resultD.keys():
+    mean = np.mean(np.array(resultD[key]),axis=0)
+    
+    fig, ax = plt.subplots()
+    ax.plot([1,2,3,4,5],mean, 'r', label='Predicted Dist')
+    ax.plot([1,2,3,4,5],list(key), 'g', label='Actual Dist')
+    text = 'the average predicted vs actual dist for' + str(list(key)) + '(Pred Count: ' + str(len(resultD[key])) + ')'
+    plt.title(text)
+    ax.legend()
+    
+
 
 ########################################################################################################################
 def diagA_Xing(X,S,D, maxIter = 100):
