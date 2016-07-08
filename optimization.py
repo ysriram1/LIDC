@@ -9,15 +9,20 @@ import numpy as np
 from scipy.optimize import minimize, fmin_cobyla, linprog, fmin_cg, fmin_l_bfgs_b, differential_evolution, fmin_cg, fsolve
 import math
 import time
+import random
+from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
+
 
 os.chdir('C:/Users/SYARLAG1/Desktop/LIDC')
 
 data_lidc = np.genfromtxt('./LIDC_REU2015.csv', delimiter = ',', skip_header = 1 , usecols = (range(11,76)))
 targets_lidc = np.genfromtxt('./LIDC_REU2015.csv', delimiter = ',', skip_header = 1, usecols = (84,93,102,111)).astype(int)
 
-data_iris = np.genfromtxt('./iris.txt', delimiter = ',',usecols = (range(4)))
-targets_iris = np.genfromtxt('./iris.txt', delimiter = ',', usecols = 4, dtype=None)
+#data_iris = np.genfromtxt('./iris.txt', delimiter = ',',usecols = (range(4)))
+#targets_iris = np.genfromtxt('./iris.txt', delimiter = ',', usecols = 4, dtype=None)
 
+########################################################################################################################
 def dataPreprocess(data, targetArray, multipleLabels = True):  
     minmax = lambda x: (x-x.min())/(x.max() - x.min())
     X = np.apply_along_axis(minmax, 0, data)
@@ -34,16 +39,58 @@ def dataPreprocess(data, targetArray, multipleLabels = True):
                 S[i,j] = 1                
             else:
                 D[i,j] = 1
+       
     return X, S, D
 
 X,S,D = dataPreprocess(data = data_lidc, targetArray = targets_lidc, multipleLabels=True)
 
-X,S,D = dataPreprocess(data = data_iris, targetArray = targets_iris, multipleLabels=False)
+#X,S,D = dataPreprocess(data = data_iris, targetArray = targets_iris, multipleLabels=False)
 
-np.savetxt('./data.csv',X,delimiter=',')
-np.savetxt('./S.csv',S, delimiter=',')
-np.savetxt('./D.csv',S, delimiter=',')
+#np.savetxt('./data.csv',X,delimiter=',')
+#np.savetxt('./S.csv',S, delimiter=',')
+#np.savetxt('./D.csv',S, delimiter=',')
 
+
+########################################################################################################################
+def createDistributionLabels(targetArray):
+    distributionLabel = []
+    for entry in targetArray:
+        labelVal = {1:0,2:0,3:0,4:0,5:0}#Initialize all 5 labels as 0s
+        for rating in labelVal.keys():
+            for radRating in entry:
+                if rating == radRating:
+                    labelVal[rating] += 0.25
+        distributionLabel.append(labelVal.values())
+    return np.array(distributionLabel)
+        
+distLabels = createDistributionLabels(targets_lidc)
+
+#######################################################################################################################
+#Test-Train split for probabilistic labels
+def splitTrainTest(data,Labels,train_percent,random_state, minmax=False):
+    random.seed(random_state)
+    indexList = range(len(data))
+    random.shuffle(indexList)
+    trainIndexList = indexList[:int(len(data)*train_percent)]
+    testIndexList = indexList[int(len(data)*train_percent):] 
+    train, trainLabels, test, testLabels = data[trainIndexList], Labels[trainIndexList], data[testIndexList], Labels[testIndexList]
+    if minmax:
+        fit = MinMaxScaler.fit(train)
+        train = fit.transform(train)
+        test = fit.transform(test)
+    return train, trainLabels, test, testLabels
+
+train, trainLabels, test, testLabels = splitTrainTest(X,distLabels,0.7,99)
+
+np.savetxt('./train.csv',train,delimiter=',')
+np.savetxt('./trainLabels.csv',trainLabels,delimiter=',')
+np.savetxt('./test.csv',test,delimiter=',')
+np.savetxt('./testLabels.csv',testLabels,delimiter=',')
+########################################################################################################################
+pred9Cos = np.genfromtxt('./prediction9Cos.csv', delimiter = ',')
+meanPred = np.mean(pred9Cos, axis=0)
+meanTest = np.mean(testLabels, axis=0)
+cosOfMeanArrays = np.dot(meanPred,meanTest)/(np.linalg.norm(meanPred)*np.linalg.norm(meanTest))
 
 ########################################################################################################################
 def diagA_Xing(X,S,D, maxIter = 100):
