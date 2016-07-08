@@ -92,6 +92,16 @@ meanPred = np.mean(pred9Cos, axis=0)
 meanTest = np.mean(testLabels, axis=0)
 cosOfMeanArrays = np.dot(meanPred,meanTest)/(np.linalg.norm(meanPred)*np.linalg.norm(meanTest))
 
+fig, ax = plt.subplots()
+
+ax.plot([1,2,3,4,5],meanPred, 'r', label='Predicted Dist')
+ax.plot([1,2,3,4,5],meanTest, 'g', label='Actual Dist')
+plt.xlabel('Malignancy Value')
+plt.ylabel('Probability')
+plt.title('Average Predicted Dist vs Acutal Dist')
+ax.legend()
+
+
 ########################################################################################################################
 def diagA_Xing(X,S,D, maxIter = 100):
     #X: the data matrix
