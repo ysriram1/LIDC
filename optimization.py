@@ -112,9 +112,9 @@ for i, label in enumerate(testLabels):
         resultD[tuple(label)] = []
         resultD[tuple(label)].append(pred9Cos[i])
 
+counts = []
 for key in resultD.keys():
     mean = np.mean(np.array(resultD[key]),axis=0)
-    
     fig, ax = plt.subplots()
     ax.plot([1,2,3,4,5],mean, 'r', label='Predicted Dist')
     ax.plot([1,2,3,4,5],list(key), 'g', label='Actual Dist')
@@ -122,8 +122,6 @@ for key in resultD.keys():
     plt.title(text)
     ax.legend()
     
-
-
 ########################################################################################################################
 def diagA_Xing(X,S,D, maxIter = 100):
     #X: the data matrix
