@@ -273,5 +273,25 @@ def fullA_Xing_NCG(X,S,D):
     return fmin_cg(objective, A0, maxiter=20)
     
 result_NCG_full = fullA_Xing_NCG(X, S, D) #shape mismatch like before
+#########################################################################################################################
+########Exploring an Alternate Approach############################################################
+def genSimDistRatioMats(data, targetArray, alpha = 1):  
+    minmax = lambda x: (x-x.min())/(x.max() - x.min())#performing min-max normalization
+    X = np.apply_along_axis(minmax, 0, data)
+    Y = createDistributionLabels(targetArray)
+    S = np.zeros(shape=[Y.shape[0], Y.shape[0]])
+    D = np.zeros(shape=[X.shape[0], X.shape[0]])
+    R = np.zeros(shape=[X.shape[0], X.shape[0]])
+    for i in range(S.shape[0]):
+        for j in range(i+1, S.shape[0]):
+            S[i,j] = np.dot(Y[i],Y[j])/(np.linalg.norm(Y[i])*np.linalg.norm(Y[j]))
+            D[i,j] = 1 - np.dot(X[i],X[j])/(np.linalg.norm(X[i])*np.linalg.norm(X[j]))
+            R[i,j] = S[i,j]/(D[i,j])**alpha
+    return X, S, D, R
+
+X,S,D,R = genSimDistRatioMats(data = data_lidc, targetArray = targets_lidc)
+
+np.savetxt('./X.csv',X, delimiter=',')
+np.savetxt('./R.csv',R, delimiter=',')
 
 
